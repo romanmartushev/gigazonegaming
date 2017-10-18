@@ -1,4 +1,6 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 'on');
 global $cachePool;
 // add wordpress settings page action for this theme
 require_once __DIR__ . '/theme-panel.php';
@@ -21,6 +23,7 @@ add_shortcode('build-form', [$bootstrap, 'formFieldsShortCode']);
 add_shortcode('env', [$bootstrap, 'getEnvShortCode']);
 add_shortcode('user-profile', [$bootstrap, 'userProfileShortCode']);
 add_shortcode('get-option', ["\\Pbc\\GigaZoneGaming\\ShortCodes\\Option", 'shortCode']);
+add_shortcode('tournament-signup-form', [$bootstrap, 'tournamentSignUpFormShortCode']);
 
 
 // get image by id, usage [get-image 12345]
@@ -142,3 +145,31 @@ function cc_mime_types($mimes) {
     return $mimes;
 }
 add_filter('upload_mimes', 'cc_mime_types');
+
+
+/**
+ * Default custom fields for posts
+ */
+$defaultCustomFields = [
+    'display_as_a_page' => 'no',
+    'display_related_posts' => 'yes',
+    'layout' => 'sidebar'
+];
+/**
+ * Set default meta fields
+ * @param $post_ID
+ * @return mixed
+ */
+function set_default_meta($post_ID){
+    global $defaultCustomFields;
+    foreach ($defaultCustomFields as $key => $val) {
+        $current_field_value = get_post_meta($post_ID,$key,true);
+        $default_meta = $val; // value
+        if ($current_field_value == '' && !wp_is_post_revision($post_ID)){
+            add_post_meta($post_ID,$key,$default_meta,true);
+        }
+    }
+
+    return $post_ID;
+}
+add_action('wp_insert_post','set_default_meta');

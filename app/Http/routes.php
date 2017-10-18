@@ -15,17 +15,18 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
+use Pbc\Bandolier\Type\Paths;
 
 Route::get('/', function () {
-    $path = Config::get('app.url'); // env('APP_URL', 'http://example.local');
+    $path = Paths::curlPath(parse_url(Config::get('app.url'), PHP_URL_PATH)); // env('APP_URL', 'http://example.local');
     try {
         return Cache::remember('front-page-from-wp', 2, function () use ($path) {
-            return file_get_contents($path);
+            return Paths::fileGetContents(['toPath' => $path, 'clientParams' => ['verify' => false]]);
         });
         // @codeCoverageIgnoreStart
     } catch (\Illuminate\Database\QueryException $ex) {
         Log::error($ex->getMessage());
-        return file_get_contents($path);
+        return Paths::fileGetContents(['toPath' => $path, 'clientParams' => ['verify' => false]]);
         // @codeCoverageIgnoreEnd
     }
 });
@@ -65,26 +66,6 @@ Route::group(['middleware' => ['UpdateRecipient', 'CCAddRecipient']], function (
             'middleware' => []
         ]
     );
-
-    // team sign up request
-    Route::post(
-        '/lol-team-sign-up',
-        [
-            'uses' => '\Pbc\FormMail\Http\Controllers\FormMailController@requestHandler',
-            'as' => 'lol-team-sign-up',
-            'middleware' => ['LolTeamSignUp']
-        ]
-    );
-
-    // individual sign up request
-    Route::post(
-        '/lol-individual-sign-up',
-        [
-            'uses' => '\Pbc\FormMail\Http\Controllers\FormMailController@requestHandler',
-            'as' => 'lol-individual-sign-up',
-            'middleware' => ['LolIndividualSignUp']
-        ]
-    );
 });
 //Route::group(['middleware' => ['WPAdmin']], function () {
 //    Route::get('/manage/game', ['as' => 'manage.game.index', 'uses' => 'Backend\Manage\GamesController@index']);
@@ -117,24 +98,56 @@ foreach (File::allFiles(__DIR__ . '/Routes') as $partials) {
  *
  */
 Route::group(['middleware' => ['WPAdmin']], function () {
-    Route::get('/GameDisplay/Admin','GameDisplay\AdminPageController@startGameDisplay');
-    Route::get('/GameDisplay/override','GameDisplay\GameDisplayController@championOverride');
-    Route::get('/GameDisplay/cache','GameDisplay\SimonCacheController@SubmitCache');
+// Admin Page
+    Route::get('/gamedisplay/admin','GameDisplay\AdminPageController@startGameDisplay');
+    Route::get('/GameDisplay/cache','GameDisplay\SimonCacheController@submitCache');
     Route::get('/GameDisplay/cacheChampions','GameDisplay\SimonCacheController@getChampions');
     Route::get('/GameDisplay/clear','GameDisplay\SimonCacheController@clearCache');
+// Champion Override Page
+    Route::get('/gamedisplay/override','GameDisplay\ChampionOverrideController@pageLoad');
     Route::get('/GameDisplay/championsOverride','GameDisplay\SimonCacheController@cacheChampionOverride');
 });
 
-Route::get('/GameDisplay/customer','GameDisplay\GameDisplayController@customerDisplay');
-Route::get('/GameDisplay/team1','GameDisplay\GameDisplayController@team1ViewDisplay');
-Route::get('/GameDisplay/team2','GameDisplay\GameDisplayController@team2ViewDisplay');
-Route::get('/GameDisplay/ajax','GameDisplay\GameDisplayController@ajaxCheckRequest');
+// Team View Display
+Route::get('/gamedisplay/{team}','GameDisplay\GameDisplayController@teamViewDisplay')->where('team', 'team1|team2');
 Route::get('/GameDisplay/getData','GameDisplay\GameDisplayController@getData');
 Route::get('/GameDisplay/Update','GameDisplay\GameDisplayController@updateData');
-Route::get('/GameDisplay/getTeamName','GameDisplay\GameDisplayController@getTeamName');
-Route::get('/player/login','Auth\PlayerUpdateController@login');
+Route::get('/GameDisplay/CarouselUpdate','GameDisplay\GameDisplayController@carouselUpdate');
+
+// Customer Page todo: Change name to "User" not Customer
+Route::get('/GameDisplay/getTeamName', function () {
+    $teamNames = array();
+    if (Cache::has('Team1Name') && Cache::has('Team2Name') && Cache::has('Team1Color') && Cache::has('Team2Color')) {
+        array_push($teamNames, Cache::get('Team1Name'));
+        array_push($teamNames, Cache::get('Team2Name'));
+        array_push($teamNames, Cache::get('Team1Color'));
+        array_push($teamNames, Cache::get('Team2Color'));
+        return response()->json($teamNames);
+    }
+    return response()->json(false);
+});
+Route::get('/gamedisplay', function (){return view('/LeagueOfLegends/customerPage');});
+
+Route::get('/player/login',function(){
+    return view('/playerUpdate/login')->withEmail("")->with('success',"");
+});
 Route::post('/player/login','Auth\PlayerUpdateController@postLogin');
-Route::get('/player/register','Auth\PlayerUpdateController@register');
+
+Route::get('/player/register',function(){
+    return view('/playerUpdate/register')->with('success',"");
+});
 Route::post('/player/register','Auth\PlayerUpdateController@postRegister');
 Route::get('/player/playerUpdate','Auth\PlayerUpdateController@playerUpdate');
+Route::post('/player/playerUpdate','Auth\PlayerUpdateController@postUpdate');
+Route::get('/player/logout','Auth\PlayerUpdateController@logout');
+Route::post('/player/logout','Auth\PlayerUpdateController@postLogin');
+Route::get('/player/recover',function (){
+    return view('/playerUpdate/recover');
+});
 
+Route::post('/player/recover','Auth\PlayerUpdateController@postRecover');
+Route::get('/player/createPassword/{token}',function (){
+    return view('/playerUpdate/createPassword')->with('success','');
+});
+
+Route::post('/player/createPassword/{token}','Auth\PlayerUpdateController@createPassword');

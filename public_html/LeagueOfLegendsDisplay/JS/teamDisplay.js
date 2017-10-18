@@ -5,7 +5,7 @@
 function fadInChampion() {
     setTimeout(
         function(){
-            for(let i=0;i<5;i++) {
+            for(var i=0;i<5;i++) {
                 $("#divA"+i).fadeOut(2000);
                 $("#divD"+i).fadeOut(2000);
             }
@@ -14,7 +14,7 @@ function fadInChampion() {
     );
     setTimeout(
         function() {
-            for(let i=0;i<5;i++) {
+            for(var i=0;i<5;i++) {
                 $("#divB"+i).fadeIn(2000);
                 $("#divE"+i).fadeIn(2000);
             }
@@ -25,7 +25,7 @@ function fadInChampion() {
 
 /* This function allows the display of victory or defeat at the end of the game */
 function displayWinLoss(){
-    let team = window.location.href;
+    var team = window.location.href;
     team = team.split("/");
     team = team[5];
     if(team === "team1") {
@@ -62,25 +62,16 @@ showBackground();
 function mobileDisplay(){
     if(document.getElementById("other")) {
         if ($(window).width() <= 530) {
-            for (let i = 0; i < 5; i++) {
+            for (var i = 0; i < 5; i++) {
                 $("#" + i + "-0").addClass("hidden");
                 $("#" + i + "-1").addClass("hidden");
                 $("#" + i + "-2").addClass("hidden");
                 $("#" + i + "-4").addClass("hidden").removeClass("col-lg");
-                setTimeout(function(){setBoxHeight();},1);
-                document.getElementById("extra" + i).innerHTML =
-                    '<div class="championRankMinimize" id="Rank3' + i +'"><b>Rank 3</b><br/><img class="I3" src="/LeagueOfLegendsDisplay/Images/Ahri.png" alt id="I3' + i +'"></div>'+
-                    '<div class="championRank" id="Rank1' + i +'"><b>Rank 1</b><br/><img class="I1" src="/LeagueOfLegendsDisplay/Images/defaultChampIcon.png" alt id="I1' + i +'"></div>'+
-                    '<div class="championRankMinimize" id="Rank2' + i +'"><b>Rank 2</b><br/><img class="I2" src="/LeagueOfLegendsDisplay/Images/Amumu.png" alt id="I2' + i +'"></div>'+
-                    '<div style="width;100%;"><div class="championNav" onclick= switchPlaces('+ i +',"+")>&lt</div>'+
-                    '<div class="championNav" onclick= switchPlaces('+ i +',"-") >&gt</div></div>'+
-                    '<div id="imageInfo1' + i +'" >Image 1</div>' +
-                    '<div id="imageInfo2' + i +'" class="hidden">Image 2</div>' +
-                    '<div id="imageInfo3' + i +'" class="hidden">Image 3</div>';
             }
+            setTimeout(function(){setBoxHeight();},1);
             $("#carouselControls").removeClass("hidden");
         }else{
-            for (let i = 0; i < 5; i++) {
+            for (var i = 0; i < 5; i++) {
                 $("#" + i + "-0").removeClass("hidden");
                 $("#" + i + "-1").removeClass("hidden");
                 $("#" + i + "-2").removeClass("hidden");
@@ -119,7 +110,7 @@ $(document).ready(function () {
 $(document).ready(GetData());
 function GetData() {
     if (!document.getElementById("other")) {
-        let team = window.location.href;
+        var team = window.location.href;
         team = team.split("/");
         team = team[5];
         ///Execute cache controller with ajax
@@ -136,6 +127,32 @@ function GetData() {
                     location.reload();
                 } else{
                     setTimeout(GetData,2000);
+                    $.ajax({
+                        method: "GET",
+                        type: "GET",
+                        url: "/app/GameDisplay/CarouselUpdate",
+                        data: {
+                            "_token": "{{ csrf_token() }}",
+                            team: team
+                        },
+                        success: function (data) {
+                            if(data){
+                                $('.carousel-inner').html("");
+                                console.log(data);
+                                var images = [];
+                                $("img").each(function(){
+                                    images.push($(this).attr('src'))
+                                });
+                                $('.carousel-inner').append("<div class='carousel-item active'><img class='d-block img-fluid' src=/" + data[0] + " alt='' style='margin-right:auto; margin-left: auto;'></div>");
+                                if(data.length === 1){
+                                    $('#carouselExampleSlidesOnly').attr('data-interval', false);
+                                }
+                                for(i=1;i<data.length;i++) {
+                                    $('.carousel-inner').append("<div class='carousel-item'><img class='d-block img-fluid' src=/" + data[i] + " alt='' style='margin-right:auto; margin-left: auto;'></div>");
+                                }
+                            }
+                        }
+                    })
                 }
             },
         })
@@ -146,7 +163,7 @@ function GetData() {
 
 /* This checks for when champions are entered into the cache as well as any other updated information*/
 function UpdateData(checkChamp) {
-    let team = window.location.href;
+    var team = window.location.href;
     team = team.split("/");
     team = team[5];
     ///Execute cache controller with ajax
@@ -161,12 +178,16 @@ function UpdateData(checkChamp) {
         },
         success: function (data) {
             console.log(data);
-            if (data[0] === "true") {
+
+            //If Content has been updated
+            if (data[0] === 'true') {
                 location.reload();
             }
-            else if (data[1] !== "false") {
-                for (let i = 0; i < data[1].length; i++) {
-                    let champName = data[1][i].split("/");
+
+            //If Champions have been submitted
+            else if (data[1] !== 'false') {
+                for (var i = 0; i < data[1].length; i++) {
+                    var champName = data[1][i].split("/");
                     champName = champName[champName.length - 1].split("_");
                     if(champName[0] === "MonkeyKing"){
                         champName[0] = "Wukong";
@@ -175,7 +196,9 @@ function UpdateData(checkChamp) {
                     document.getElementById("divE" + data[2][i]).innerHTML = '<img id="'+ "M"+ data[2][i]+'" class="championImage" src="' + data[1][i] + '"/><div class="championName"><h3>' + champName[0] + '</h3></div>';
                 }
                 fadInChampion();
-                setTimeout(function(){ UpdateData(false) },2000);
+                setTimeout(function () {
+                    UpdateData(false)
+                }, 2000);
             }else{
                 setTimeout(function(){ UpdateData(checkChamp) },2000);
             }
@@ -214,17 +237,17 @@ $(document).ready(function() {
 
 /* This displays the information according to what champion is inside the #Rank1 div */
 function ShowInfo(i){
-    if ($("#Rank1"+ i).find("b").text() === "Rank 1"){
-        $("#imageInfo1"+i).removeClass("hidden");
-        $("#imageInfo2"+i+",#imageInfo3"+i).addClass("hidden");
+    if ($("#Rank1"+ i).find("img").attr("id") === "I1"+i){
+        $("#imageInfo1"+i+",#splash1"+i).removeClass("hidden");
+        $("#imageInfo2"+i+",#imageInfo3"+i+",#splash2"+i+",#splash3"+i).addClass("hidden");
     }
-    else if ($("#Rank1"+i).find("b").text() === "Rank 2"){
-        $("#imageInfo1"+i+",#imageInfo3"+i).addClass("hidden");
-        $("#imageInfo2"+i).removeClass("hidden");
+    else if ($("#Rank1"+ i).find("img").attr("id") === "I2"+i){
+        $("#imageInfo1"+i+",#imageInfo3"+i+",#splash1"+i+",#splash3"+i).addClass("hidden");
+        $("#imageInfo2"+i+",#splash2"+i).removeClass("hidden");
     }
     else{
-        $("#imageInfo1"+i+",#imageInfo2"+i).addClass("hidden");
-        $("#imageInfo3"+i).removeClass("hidden");
+        $("#imageInfo1"+i+",#imageInfo2"+i+",#splash1"+i+",#splash2"+i).addClass("hidden");
+        $("#imageInfo3"+i+",#splash3"+i).removeClass("hidden");
     }
 }
 /* This replaces the contents of the Rank divs in the extra stats to view different champions */

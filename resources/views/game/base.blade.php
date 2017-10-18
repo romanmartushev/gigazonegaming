@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Controller</title>
-    <link rel="stylesheet" href="@autoVersion('/app/content/libraries/bootstrap/css/bootstrap.css')">
-    <link rel="stylesheet" href="@autoVersion('/bower_components/select2/dist/css/select2.min.css')">
-    <link rel="stylesheet" href="@autoVersion('/bower_components/font-awesome/css/font-awesome.css')">
-    <link rel="stylesheet" href="@autoVersion('/app/content/css/app.css')">
+    <link rel="stylesheet" href="/app/content/libraries/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/bower_components/select2/dist/css/select2.min.css">
+    <link rel="stylesheet" href="/bower_components/font-awesome/css/font-awesome.css">
+    <link rel="stylesheet" href="/bower_components/jquery-ui/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="/bower_components/clockpicker/dist/jquery-clockpicker.css">
+    <link rel="stylesheet" href="/app/content/css/app.css">
     <style type="text/css" href="">
         @yield('css')
         body{
@@ -47,24 +49,42 @@
         </div>
         {{-- if the requirejs flag is set then load libraries as atm, otherwise load them normally --}}
         @if (isset($requireJs) && $requireJs === true)
-            <script src="@autoVersion('/app/content/js/common-require.js')"></script>
-            <script src="@autoVersion('/bower_components/requirejs/require.js')"></script>
-            <script src="@autoVersion('/app/content/js/main-require.js')"></script>
+            <script src="/app/content/js/common-require.js"></script>
+            <script src="/bower_components/requirejs/require.js"></script>
+            <script src="/app/content/js/main-require.js"></script>
+            <script src="/bower_components/jquery-ui/jquery-ui.js"></script>
+            <script src="/bower_components/clockpicker/dist/jquery-clockpicker.js"></script>
         @else
-            <script type="text/javascript" src="@autoVersion('/bower_components/jquery/dist/jquery.min.js')"></script>
-            <script type="text/javascript" src="@autoVersion('/app/content/libraries/bootstrap/js/bootstrap.min.js')"></script>
-            <script type="text/javascript" src="@autoVersion('/bower_components/select2/dist/js/select2.full.min.js')"></script>
+            <script type="text/javascript" src="/bower_components/jquery/dist/jquery.min.js"></script>
+            <script src="/bower_components/clockpicker/dist/jquery-clockpicker.js"></script>
+            <script src="/bower_components/jquery-ui/jquery-ui.js"></script>
+            <script type="text/javascript" src="/app/content/libraries/bootstrap/js/bootstrap.min.js"></script>
+            <script type="text/javascript" src="/bower_components/select2/dist/js/select2.full.min.js"></script>
             {{-- if this is not a requirejs route then load require along side the above libraries --}}
-            <script src="@autoVersion('/app/content/js/common-require.js')"></script>
-            <script src="@autoVersion('/bower_components/requirejs/require.js')"></script>
+            <script src="/app/content/js/common-require.js"></script>
+            <script src="/bower_components/requirejs/require.js"></script>
             {{-- Since jquery and bootstrap are already loaded, don't load them again --}}
-            <script src="@autoVersion('/app/content/js/modules/paths-require.js')"></script>
-            <script src="@autoVersion('/app/content/js/main-require.js')"></script>
+            <script src="/app/content/js/modules/paths-require.js"></script>
+            <script src="/app/content/js/main-require.js"></script>
         @endif
 
         @yield('js-sheet')
         <script type="text/javascript">
-            @yield('js')
+            $(function() {
+
+                @yield('js')
+                $(".datepicker").datepicker({
+                    dateFormat: 'yy-mm-dd',
+                    changeMonth: true,
+                    changeYear: true,
+                });
+                $('.timepicker').clockpicker({
+                    donetext: 'Done',
+                    default: 'now',
+                    autoclose: true,
+                    twelvehour: false,
+                });
+            });
         </script>
     </body>
 </html>

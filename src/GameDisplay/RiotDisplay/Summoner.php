@@ -22,37 +22,36 @@ class Summoner{
     protected $FLEXRank;
     protected $FLEXRankedWinLoss;
     protected $api;
-    public $ApiKey;
+    protected $top3Champions;
+    protected $top3ChampionStats;
 
 # Constructor
 #----------------------------------------------------------------------
     /**
      * Summoner constructor.
      * @param $summonerName
-     * @param $ApiKeyNumber
+     * @param $api
+     *
      */
-    function __construct($summonerName, $ApiKeyNumber)
+    function __construct($summonerName, $api)
     {
         #Initailize the name of the summoner
         $this->setSummonerName($summonerName);
 
-        #Sets up api so that its ready for requests
-        $this->setApiKey($ApiKeyNumber);
-        $this->setApi();
+        #Sets up api so that its is injected with a summoner ready for requests
+        $this->setApi($api);
 
         #set Summoner properties
-        $this->setSummonerID();
-        $this->setIcon();
-        $this->setSoloRankedWinLoss();
-        $this->setSoloRank();
-        $this->setFLEXRank();
-        $this->setFLEXRankedWinLoss();
+        $this->setSummonerID($this->api->getSummonerId());
+        $this->setIcon($this->api->getSummonerIcon());
+        $this->setSoloRankedWinLoss($this->api->getSoloRankedWinLoss());
+        $this->setSoloRank($this->api->getSoloRank());
+        $this->setFLEXRank($this->api->getFLEXRank());
+        $this->setFLEXRankedWinLoss($this->api->getFLEXRankedWinLoss());
+        $this->setTop3Champions($this->api->getTop3Champions());
 
-
-
-        #dd("Solo Rank: " . $this->soloRank . " Solo Win|Loss: " . $this->soloRankedWinLoss ." Flex Rank: " . $this->FLEXRank . " Flex Win|Loss: " . $this->FLEXRankedWinLoss);
-//
     }
+
 # Methods
 #----------------------------------------------------------------------
     /**
@@ -73,57 +72,60 @@ class Summoner{
     }
 
     /**
-     *
+     * @param $api
      */
-    public function setApi(){
-        #creats a new api object
-        $this->api = new Api($this->summonerName, $this->ApiKey);
+    public function setApi($api){
+        #Sets this api
+        $this->api = $api;
+
+        #Injects summoner into api so that this api can uniquely request data for this summoner.
+        $this->api->injectSummoner($this->summonerName, true);
+
     }
 
     /**
-     *
+     * @param $summonerId
      */
-    public function setSummonerID(){
-        $this->summonerID = $this->api->getSummonerId();
+    public function setSummonerID($summonerId){
+        $this->summonerID = $summonerId;
     }
 
     /**
-     *
+     * @param $icon
      */
-    public function  setIcon(){
-        $this->icon = $this->api->getSummonerIcon();
+    public function  setIcon($icon){
+        $this->icon = $icon;
     }
 
     /**
-     *
+     * @param $soloRank
      */
-    public function setSoloRank(){
-        $this->soloRank = $this->api->getSoloRank();
+    public function setSoloRank($soloRank){
+        $this->soloRank = $soloRank;
     }
 
     /**
-     *
+     * @param $soloRankedWinLoss
      */
-    public function setSoloRankedWinLoss(){
-        $this->soloRankedWinLoss = $this->api->getSoloRankedWinLoss();
+    public function setSoloRankedWinLoss($soloRankedWinLoss){
+        $this->soloRankedWinLoss = $soloRankedWinLoss;
     }
 
     /**
-     *
+     * @param $flexRank
      */
-    public function setFLEXRank()
+    public function setFLEXRank($flexRank)
     {
-        $this->FLEXRank = $this->api->getFLEXRank();
+        $this->FLEXRank = $flexRank;
     }
 
     /**
-     *
+     * @param $flexRankWinLoss
      */
-    public function setFLEXRankedWinLoss()
+    public function setFLEXRankedWinLoss($flexRankWinLoss)
     {
-        $this->FLEXRankedWinLoss = $this->api->getFLEXRankedWinLoss();
+        $this->FLEXRankedWinLoss = $flexRankWinLoss;
     }
-
 
     /**
      *
@@ -133,17 +135,14 @@ class Summoner{
     }
 
     /**
-     * @param mixed $ApiKey
+     * @param mixed $top3Champions
      */
-    public function setApiKey($ApiKey)
+    public function setTop3Champions($top3Champions)
     {
-        $number =(int)$ApiKey + 1;
-        $key = env("RIOT_API_KEY$number", false);
-        if($key === false){
-            throw new Exception("Api id not set for $this->summonerName $number");
-        }
-        $this->ApiKey = env("RIOT_API_KEY$number", 'null');
+        $this->top3Champions = $top3Champions;
     }
+
+
 
 
 # Getters
@@ -219,5 +218,15 @@ class Summoner{
     {
         return $this->summonerName;
     }
+
+    /**
+     * @return mixed
+     * Returns two arrays. [0] is the champion Icon [3] is the champion splash art
+     */
+    public function getTop3Champions()
+    {
+        return $this->top3Champions;
+    }
+
 
 }

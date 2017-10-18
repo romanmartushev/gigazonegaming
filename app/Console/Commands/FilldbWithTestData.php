@@ -1,10 +1,13 @@
 <?php
+
 namespace App\Console\Commands;
+
 use App\Models\Championship\Game;
 use App\Models\Championship\Team;
 use App\Models\Championship\Tournament;
 use App\Models\Championship\Player;
 use Illuminate\Console\Command;
+
 class FilldbWithTestData extends Command
 {
     /**
@@ -13,12 +16,14 @@ class FilldbWithTestData extends Command
      * @var string
      */
     protected $signature = 'test:fillDB';
+
     /**
      * The console command description.
      *
      * @var string
      */
     protected $description = 'fill DB with test summoners';
+
     /**
      * Create a new command instance.
      *
@@ -28,56 +33,63 @@ class FilldbWithTestData extends Command
     {
         parent::__construct();
     }
+
     /**
      * Execute the console command.
      *
-     * @return void
+     * @return mixed
      */
     public function handle()
     {
-
         $this->fillDB();
-        var_dump("This is working");
+        dd("This is working");
     }
+
     public function fillDB(){
+
         #Captian
         $Captian = new Player();
         $Captian->setAttribute('username', "KingMorpheus2131");
-        $Captian->setAttribute('email', "martushev8@gmail.com");
-        $Captian->setAttribute('name', "Roman");
-        $Captian->setAttribute('phone', "2182605085");
+        $Captian->setAttribute('email', "simoncecer7@gmail.com");
+        $Captian->setAttribute('name', "Simon");
+        $Captian->setAttribute('phone', "6125596450");
         $Captian->save();
+
         #Team
         $team = new Team();
         $team->tournament_id = 1;
-        $team->name =  "That Team";
+        $team->name =  "Power Rangers";
+
         #add captain and save the team
         $team->captain = $Captian->id;
         $team->save();
+
+
+
         #relations
         $Captian::createRelation([
-            'player' => $Captian->id,
-            'Game' => 2,
-            'Tournament' => 1,
-            'team' => $team->id,
+            'player' => $Captian,
+            'game' => 2,
+            'team' => $team,
         ]);
-        $playerUserNameArray = array('ReckonStuff', 'manklar', 'Juanpablomontoya', 'YoBroSo');
-        $i = 0;
+
+
+        $playerUserNameArray = array('spartan7warrior', 'gigazoneplayer1', 'gigazoneplayer2', 'gigazoneplayer3');
+
         #creat players for team
         foreach ($playerUserNameArray as $Player){
             $player = new Player();
             $player->username = $Player;
-            $player->email = "ready_player_" . $i . "@gigazonegaming.com";
-            $player->phone = "2182605085";
+            $player->email = "simoncecer7@gmail.com";
+            $player->phone = "6125555555";
             $player->save();
             // attach player to team/tournament/game
             $player::createRelation([
-                'player' => $player->id,
-                'Game' => 2,
-                'Tournament' => 1,
-                'team' => $team->id,
+                'player' => $player,
+                'tournament' => 1,
+                'game' => 2,
+                'team' => $team,
             ]);
-            $i++;
         }
     }
 }

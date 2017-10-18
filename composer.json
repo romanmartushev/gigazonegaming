@@ -23,10 +23,10 @@
       "package": {
         "name": "wordpress/wordpress",
         "type": "webroot",
-        "version": "4.7.4",
+        "version": "4.8.2",
         "dist": {
           "type": "zip",
-          "url": "https://wordpress.org/wordpress-4.7.4.zip"
+          "url": "https://wordpress.org/wordpress-4.8.2.zip"
         },
         "require": {
           "fancyguy/webroot-installer": "1.0.0"
@@ -83,10 +83,10 @@
       "package": {
         "name": "lopo/duplicate-post",
         "type": "wordpress-plugin",
-        "version": "3.0.3",
+        "version": "3.2",
         "dist": {
           "type": "zip",
-          "url": "https://downloads.wordpress.org/plugin/duplicate-post.3.0.3.zip"
+          "url": "https://downloads.wordpress.org/plugin/duplicate-post.3.2.zip"
         },
         "require": {
           "composer/installers": "v1.0.7"
@@ -113,7 +113,7 @@
       "package": {
         "name": "figureone/insert-pages",
         "type": "wordpress-plugin",
-        "version": "3.1.6",
+        "version": "3.2.5",
         "dist": {
           "type": "zip",
           "url": "https://downloads.wordpress.org/plugin/insert-pages.zip"
@@ -143,13 +143,26 @@
       "package": {
         "name": "disqus/disqus-comment-system",
         "type": "wordpress-plugin",
-        "version": "2.86",
+        "version": "2.87",
         "dist": {
           "type": "zip",
-          "url": "https://downloads.wordpress.org/plugin/disqus-comment-system.2.86.zip"
+          "url": "https://downloads.wordpress.org/plugin/disqus-comment-system.2.87.zip"
         },
         "require": {
           "composer/installers": "v1.0.7"
+        }
+      }
+    },
+    {
+      "type": "package",
+      "package": {
+        "name": "paulbunyancommunications/mailtrapper",
+        "type": "git",
+        "version": "master",
+        "source": {
+          "url": "https://github.com/paulbunyancommunications/mailtrapper.git",
+          "type": "git",
+          "reference": "master"
         }
       }
     }
@@ -159,20 +172,17 @@
     "laravel/framework": "5.2.*",
     "cartalyst/sentinel": "2.0.*",
     "doctrine/dbal": "~2.5",
-    "wordpress/wordpress": "4.7.4",
     "fancyguy/webroot-installer": "1.0.0",
     "symfony/yaml": "~2.4",
     "paulbunyannet/autoversion": "~1.0",
     "pmenard/media-tags": "3.2.0.2",
     "nacin/link-manager": "0.1-beta",
-    "lopo/duplicate-post": "*",
-    "paulbunyannet/bandolier": "~1.3",
+    "paulbunyannet/bandolier": "~1.5",
     "twig/twig": "^1.24",
     "cocur/slugify": "^1.4",
     "archetyped/cornerstone": "*",
     "anahkiasen/underscore-php": "^2.0",
     "mungobbq/enable-media-replace": "*",
-    "figureone/insert-pages": "*",
     "tedivm/stash": "^0.14.1",
     "wp/rest-api": "*",
     "vlucas/phpdotenv": "^2.2",
@@ -194,7 +204,10 @@
     "guzzlehttp/guzzle": "~5.3|~6.0",
     "brandonwamboldt/utilphp": "1.1.*",
     "league/commonmark": "^0.15.0",
-    "disqus/disqus-comment-system": "*"
+    "disqus/disqus-comment-system": "^2.87",
+    "lopo/duplicate-post": "^3.2",
+    "wordpress/wordpress": "4.8.2",
+    "figureone/insert-pages": "3.2.5"
   },
   "require-dev": {
     "fzaninotto/faker": "~1.4",
@@ -206,7 +219,7 @@
     "phing/phing": "2.*",
     "codeception/codeception": "2.3.1",
     "codeception/c3": "2.0.12",
-    "etsy/phan": "^0.9.1"
+    "paulbunyancommunications/mailtrapper": "dev-master"
   },
   "extra": {
     "webroot-dir": "public_html/wp",
@@ -246,7 +259,8 @@
       "tests/integration/BaseIntegration.php"
     ],
     "psr-4": {
-      "Codeception\\Module\\": "src/Codeception/Module"
+      "Codeception\\Module\\": "src/Codeception/Module",
+      "Enqueue\\Test\\": "src/Enqueue/Test"
     }
   },
   "scripts": {
@@ -258,21 +272,22 @@
     ],
     "post-install-cmd": [
       "Illuminate\\Foundation\\ComposerScripts::postInstall",
-      "php artisan ide-helper:generate; #",
-      "php artisan ide-helper:meta; #",
+      "if [ -f ./vendor/barryvdh/laravel-ide-helper/src/IdeHelperServiceProvider.php ]; then php artisan ide-helper:generate; fi; #",
+      "if [ -f ./vendor/barryvdh/laravel-ide-helper/src/IdeHelperServiceProvider.php ]; then php artisan ide-helper:meta; fi; #",
       "php artisan optimize; #",
       "bash ${PWD}/composer_post_fixes.sh; #"
     ],
     "post-update-cmd": [
       "Illuminate\\Foundation\\ComposerScripts::postUpdate",
+      "if [ -f ./vendor/barryvdh/laravel-ide-helper/src/IdeHelperServiceProvider.php ]; then php artisan ide-helper:generate; fi; #",
+      "if [ -f ./vendor/barryvdh/laravel-ide-helper/src/IdeHelperServiceProvider.php ]; then php artisan ide-helper:meta; fi; #",
       "php artisan optimize; #",
       "bash ${PWD}/composer_post_fixes.sh; #"
     ],
     "test": [
       "# Running Tests, usage `composer test -- TEST_ARGUMENTS`; #",
-      "curl --silent -k https://gist.githubusercontent.com/paulbunyannet/216d5ad5e48cf8dfbd72c0bb3d6be919/raw/$(git ls-remote https://gist.github.com/paulbunyannet/216d5ad5e48cf8dfbd72c0bb3d6be919 | grep HEAD | awk '{ print $1}')/testing.sh > testing.sh; #",
-      "chmod u+x testing.sh; #",
-      "./testing.sh; #"
+      "curl --silent -k https://gist.githubusercontent.com/castillo-n/cd4390a0ae0a2f6e4ca1b8c9472d10c1/raw/$(git ls-remote https://gist.github.com/castillo-n/cd4390a0ae0a2f6e4ca1b8c9472d10c1 | grep HEAD | awk '{ print $1}')/testing.sh > testing.sh; #",
+      "chmod u+x testing.sh; #"
     ],
     "test-failed": [
       "@test -- -g failed; #"
@@ -281,10 +296,6 @@
       "# Getting Docker Assets; #",
       "curl --silent https://raw.githubusercontent.com/paulbunyannet/bash/$(git ls-remote https://github.com/paulbunyannet/bash.git | grep HEAD | awk '{ print $1}')/docker/get_docker_assets.sh > get_docker_assets.sh; #",
       "bash ${PWD}/get_docker_assets.sh; #"
-    ],
-    "docker_assets": [
-      "# Some scripts are still using the old underscore naming; #",
-      "@docker-assets; #"
     ],
     "post-docker": [
       "# Commands to run after ./dock.sh is done ; #",

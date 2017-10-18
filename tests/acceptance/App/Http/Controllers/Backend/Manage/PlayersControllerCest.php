@@ -21,6 +21,7 @@ class PlayersControllerCest extends BaseAcceptance
         $this->populateDB($I);
         $this->loginWithAdminUser($I);
         $I->amOnPage('/app/manage/player');
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
     }
 
     /**
@@ -30,6 +31,51 @@ class PlayersControllerCest extends BaseAcceptance
     {
         exec('php artisan db:seed --class=DatabaseSeeder');
         $this->faker = \Faker\Factory::create();
+    }
+    /**
+     * Create the test admin user
+     *
+     * @param AcceptanceTester $I
+     * @param $id
+     * a css # id of the element
+     * @param $values
+     * a single value or an array of values for the select
+     */
+    protected function localDontSeeOptionIsSelected(AcceptanceTester $I, $id, $values)
+    {
+
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
+        $exist = $I->executeJS("var myElem = document.getElementById('".$id."');if (myElem === null){return 0;}else{return 1;}");
+        if($exist == "1" or $exist == 1){
+            $I->executeJS("$('html, body').animate({
+                scrollTop: $(\"#$id\").offset().top - 30
+                }, 10);");
+            $I->waitForElementVisible(['id' => $id ], $this::TEXT_WAIT_TIMEOUT);
+            foreach($values as $key => $value){
+                $I->dontSeeOptionIsSelected(['id' => $id ], $value);
+            }
+        }
+    }
+    /**
+     * Create the test admin user
+     *
+     * @param AcceptanceTester $I
+     * @param $id
+     * a css # id of the element
+     * @param $values
+     * a single value or an array of values for the select
+     */
+    protected function localSeeOptionIsSelected(AcceptanceTester $I, $id, $values)
+    {
+
+        $exist = $I->executeJS("var myElem = document.getElementById('".$id."');if (myElem === null){return 0;}else{return 1;}");
+        if($exist == "1" or $exist == 1){
+            $I->scrollTo(['id' => $id ]);
+            $I->waitForElementVisible(['id' => $id ], $this::TEXT_WAIT_TIMEOUT);
+            foreach($values as $key => $value){
+                $I->seeOptionIsSelected(['id' => $id ], $value);
+            }
+        }
     }
 
     /**
@@ -48,7 +94,7 @@ class PlayersControllerCest extends BaseAcceptance
     public function tryToGetToThePlayerApp(AcceptanceTester $I)
     {
         $I->wantTo('get to the player management page');
-        $I->amOnPage('/app/manage/player');
+        $I->waitForText('Create a new Player', $this::TEXT_WAIT_TIMEOUT);
         $I->see('Create a new Player');
     }
 
@@ -63,16 +109,16 @@ class PlayersControllerCest extends BaseAcceptance
         $email = "DummyUserA@Tester.com";
         $phone = "(218) - 444 - 4444";
         $I->wantTo('create a player on the management page');
-        $I->amOnPage('/app/manage/player');
         $I->fillField(['id' => 'name'], $name);
         $I->fillField(['id' => 'username'], $username);
         $I->fillField(['id' => 'email'], $email);
         $I->fillField(['id' => 'phone'], $phone);
         $I->click("Save");
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
         $I->waitForText('Player created successfully!', $this::TEXT_WAIT_TIMEOUT * 1.5);
-        $I->dontSeeOptionIsSelected('select#game_id', 'Tester Game');
-        $I->dontSeeOptionIsSelected('select#tournament_id', 'Tester Tournament');
-        $I->dontSeeOptionIsSelected('select#team_id', 'Tester Team');
+        $this->localDontSeeOptionIsSelected($I, 'game_id', ['tester-game']);
+        $this->localDontSeeOptionIsSelected($I, 'tournament_id', ['Tester Tournament']);
+        $this->localDontSeeOptionIsSelected($I, 'team_id', ['Tester Team']);
     }
     /**
      * @param AcceptanceTester $I
@@ -90,12 +136,14 @@ class PlayersControllerCest extends BaseAcceptance
         $I->executeJS("$('#game_id').select2({
                 allowClear: true
             });");
-        $I->click("Update");
-        $I->waitForText('Update Player: “' . $nameB . '”', $this::TEXT_WAIT_TIMEOUT * 1.5 );
-        $I->see('Update Player: “' . $nameB . '”');
-        $I->seeOptionIsSelected('select#game_id', 'tester-game');
-        $I->dontSeeOptionIsSelected('select#tournament_id', 'Tester Tournament');
-        $I->dontSeeOptionIsSelected('select#team_id', 'Tester Team');
+        $I->click(['id'=>"submit"]);
+        $I->wait(5);
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
+        $I->waitForText('Player updated successfully', $this::TEXT_WAIT_TIMEOUT * 1.5 );
+        $I->seeInField("#name", "$nameB" );
+        $this->localSeeOptionIsSelected($I, 'game_id', ['tester-game']);
+        $this->localDontSeeOptionIsSelected($I, 'tournament_id', ['Tester Tournament']);
+        $this->localDontSeeOptionIsSelected($I, 'team_id', ['Tester Team']);
     }
     /**
      * @param AcceptanceTester $I
@@ -113,12 +161,14 @@ class PlayersControllerCest extends BaseAcceptance
         $I->executeJS("$('#tournament_id').select2({
                 allowClear: true
             });");
-        $I->click("Update");
-        $I->waitForText('Update Player: “' . $nameB . '”', $this::TEXT_WAIT_TIMEOUT * 1.5 );
-        $I->see('Update Player: “' . $nameB . '”');
-        $I->seeOptionIsSelected(['id' => 'game_id'], 'tester-game');
-        $I->seeOptionIsSelected(['id' => 'tournament_id'], 'Tester Tournament');
-        $I->dontSeeOptionIsSelected(['id' => 'team_id'], 'Tester Team');
+        $I->click(['id'=>"submit"]);
+        $I->wait(5);
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
+        $I->waitForText('Player updated successfully', $this::TEXT_WAIT_TIMEOUT * 1.5 );
+        $I->seeInField("#name", "$nameB" );
+        $this->localSeeOptionIsSelected($I, 'game_id', ['tester-game']);
+        $this->localSeeOptionIsSelected($I, 'tournament_id', ['Tester Tournament']);
+        $this->localDontSeeOptionIsSelected($I, 'team_id', ['Tester Team']);
     }
     /**
      * @param AcceptanceTester $I
@@ -136,33 +186,35 @@ class PlayersControllerCest extends BaseAcceptance
         $I->executeJS("$('#team_id').select2({
                 allowClear: true
             });");
-        $I->click("Update");
-        $I->waitForText('Update Player: “' . $nameB . '”', $this::TEXT_WAIT_TIMEOUT * 1.5 );
-        $I->see('Update Player: “' . $nameB . '”');
-        $I->seeOptionIsSelected('select#game_id', 'tester-game');
-        $I->seeOptionIsSelected('select#tournament_id', 'Tester Tournament');
-        $I->seeOptionIsSelected('select#team_id', 'Tester Team');
+        $I->click(['id'=>"submit"]);
+        $I->wait(5);
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
+        $I->waitForText('Player updated successfully', $this::TEXT_WAIT_TIMEOUT * 1.5 );
+        $I->seeInField("#name", "$nameB" );
+        $this->localSeeOptionIsSelected($I, 'game_id', ['tester-game']);
+        $this->localSeeOptionIsSelected($I, 'tournament_id', ['Tester Tournament']);
+        $this->localSeeOptionIsSelected($I, 'team_id', ['Tester Team']);
     }
 
     /**
      * @param AcceptanceTester $I
      */
-    public function tryToCreateAPlayerWithAnEmailMissing(AcceptanceTester $I)
+    public function tryToCreateAPlayerWithAMissingEmail(AcceptanceTester $I)
     {
         $faker = \Faker\Factory::create();
-        $this->playerCreation($I);
         $name = "Tester PlayerX";
         $username = "SlySkeever";
         $username2 = "DragonDefeater"; //username should be unique
-        $email = "playerx@test.com";
+        $email = "playerx@test123.com";
         $email2 = "DummyUserA@bpaosd.com"; //email should be unique
         $phone = "(218) - 444 - 4444";
         $I->wantTo('create a player on the management page without an email');
-        $I->amOnPage('/app/manage/player');
         $I->fillField(['id' => 'name'], $name);
-        $I->fillField(['id' => 'username'], $username);
+        $I->fillField(['id' => 'username'], $username2);
+        $I->fillField(['id' => 'email'], "");
         $I->fillField(['id' => 'phone'], $phone);
         $I->click(['id' => 'submit']);
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
         $I->waitForText("A email address is required", $this::TEXT_WAIT_TIMEOUT * 1.5 );
         $I->see("A email address is required");
     }
@@ -170,7 +222,7 @@ class PlayersControllerCest extends BaseAcceptance
     /**
      * @param AcceptanceTester $I
      */
-    public function tryToCreateAPlayerWithAnEmailBadEmail(AcceptanceTester $I)
+    public function tryToCreateAPlayerWithABadEmail(AcceptanceTester $I)
     {
         $faker = \Faker\Factory::create();
         $this->playerCreation($I);
@@ -183,6 +235,7 @@ class PlayersControllerCest extends BaseAcceptance
         $I->wantTo('create a player on the management page with an email that is not valid');
         $I->fillField(['id' => 'email'], implode(' ', $faker->words(3)));
         $I->click(['id' => 'submit']);
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
         $I->waitForText("That doesn't look like an email, try again", $this::TEXT_WAIT_TIMEOUT * 1.5 );
         $I->see("That doesn't look like an email, try again");
     }
@@ -202,6 +255,7 @@ class PlayersControllerCest extends BaseAcceptance
         $I->wantTo('create a player on the management page with an email that is already in the db');
         $I->fillField(['id' => 'email'], $email);
         $I->click(['id' => 'submit']);
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
         $I->waitForText("A email address is already been used, use your previously created account or create a new one", $this::TEXT_WAIT_TIMEOUT * 1.5 );
         $I->see("A email address is already been used, use your previously created account or create a new one");
     }
@@ -224,11 +278,14 @@ class PlayersControllerCest extends BaseAcceptance
         $I->fillField(['id' => 'username'], $username2);
         $I->fillField(['id' => 'email'], $email2);
         $I->click(['id' => 'submit']);
-        $I->waitForText('Update Player: “' . $name . '”');
-        $I->see('Update Player: “' . $name . '”');
-        $I->dontSeeOptionIsSelected('select#game_id', 'Tester Game');
-        $I->dontSeeOptionIsSelected('select#tournament_id', 'Tester Tournament');
-        $I->dontSeeOptionIsSelected('select#team_id', 'Tester Team');
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
+        $I->waitForText('Player updated successfully', $this::TEXT_WAIT_TIMEOUT * 1.5 );
+        $I->seeInField("#name", "$name" );
+        $this->localDontSeeOptionIsSelected($I, 'game_id', ['tester-game']);
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
+        $this->localDontSeeOptionIsSelected($I, 'tournament_id', ['Tester Tournament']);
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
+        $this->localDontSeeOptionIsSelected($I, 'team_id', ['Tester Team']);
     }
     /**
      * @param AcceptanceTester $I
@@ -242,11 +299,11 @@ class PlayersControllerCest extends BaseAcceptance
         $email2 = "DummyUserA@bpaosd.com"; //email should be unique
         $phone = "(218) - 444 - 4444";
         $I->wantTo('create a player on the management page without a username');
-        $I->amOnPage('/app/manage/player');
         $I->fillField(['id' => 'name'], $name);
         $I->fillField(['id' => 'email'], $email2);
         $I->fillField(['id' => 'phone'], $phone);
         $I->click("Save");
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
         $I->waitForText("A Username is required",$this::TEXT_WAIT_TIMEOUT * 1.5 );
         $I->see("A Username is required");
     }
@@ -264,14 +321,18 @@ class PlayersControllerCest extends BaseAcceptance
         $I->fillField(['id' => 'email'], $email);
         $I->fillField(['id' => 'name'], $name);
         $I->click("Save");
+        $I->wait(5);
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
         $I->waitForText('Player created successfully!', $this::TEXT_WAIT_TIMEOUT * 1.5 );
         $name2 = "Tester PlayerX2";
         $email2 = "playerx2222@Tester.com";
         $I->amOnPage('/app/manage/player');
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
         $I->fillField(['id' => 'name'], $name2);
         $I->fillField(['id' => 'username'], $username);
         $I->fillField(['id' => 'email'], $email2);
         $I->click("Save");
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
         $I->waitForText("The Username is already in use, please select a new one", $this::TEXT_WAIT_TIMEOUT * 1.5 );
         $I->see("The Username is already in use, please select a new one");
     }
@@ -293,11 +354,12 @@ class PlayersControllerCest extends BaseAcceptance
         $I->fillField(['id' => 'email'], $email2);
         $I->fillField(['id' => 'name'], $name);
         $I->click("Save");
-        $I->waitForText('Update Player: “'.$name.'”', $this::TEXT_WAIT_TIMEOUT * 1.5 );
-        $I->see('Update Player: “'.$name.'”');
-        $I->dontSeeOptionIsSelected('select#game_id', 'Tester Game');
-        $I->dontSeeOptionIsSelected('select#tournament_id', 'Tester Tournament');
-        $I->dontSeeOptionIsSelected('select#team_id', 'Tester Team');
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
+        $I->waitForText('Update Player:', $this::TEXT_WAIT_TIMEOUT * 1.5 );
+        $I->seeInField("#name", "$name" );
+        $this->localDontSeeOptionIsSelected($I, 'game_id', ['tester-game']);
+        $this->localDontSeeOptionIsSelected($I, 'tournament_id', ['Tester Tournament']);
+        $this->localDontSeeOptionIsSelected($I, 'team_id', ['Tester Team']);
     }
     /**
      * @param AcceptanceTester $I
@@ -318,86 +380,97 @@ class PlayersControllerCest extends BaseAcceptance
         $phone9 = "2184144241";
         $phone10 = "+12184144249";
         $phone11 = "4144249"; // failing number
-        $I->waitForText('Update Player: “'.$name.'”', $this::TEXT_WAIT_TIMEOUT * 1.5 );
-        $I->wantTo('create a player on the management page with a valid number1');
+        $I->waitForText('Update Player:', $this::TEXT_WAIT_TIMEOUT * 1.5 );
+        $I->wantTo('update a player on the management page with a valid number1');
         $I->fillField(['id' => 'username'], "DragonDefeater");
         $I->fillField(['id' => 'phone'], $phone1);
         $I->fillField(['id' => 'name'], $nameB);
-        $I->click("Update");
-        $I->waitForText('Update Player: “'.$nameB.'”', $this::TEXT_WAIT_TIMEOUT * 1.5 );
-        $I->see('Update Player: “'.$nameB.'”');
-        $I->click(".close");
-        $I->wantTo('create a player on the management page with a valid number2');
+        $I->click(['id'=>"submit"]);
+        $I->wait(10);
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
+        $I->waitForText('Update Player:', $this::TEXT_WAIT_TIMEOUT * 1.5 );
+        $I->seeInField("#name", "$nameB" );
+        $I->wantTo('update a player on the management page with a valid number2');
         $I->fillField(['id' => 'phone'], $phone2);
         $I->fillField(['id' => 'name'], $name);
-        $I->click("Update");
-        $I->waitForText('Update Player: “'.$name.'”', $this::TEXT_WAIT_TIMEOUT * 1.5 );
-        $I->see('Update Player: “'.$name.'”');
-        $I->click(".close");
-        $I->wantTo('create a player on the management page with a valid number3');
+        $I->click(['id'=>"submit"]);
+        $I->wait(10);
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
+        $I->waitForText('Update Player:', $this::TEXT_WAIT_TIMEOUT * 1.5 );
+        $I->seeInField("#name", "$name" );
+        $I->wantTo('update a player on the management page with a valid number3');
         $I->fillField(['id' => 'phone'], $phone3);
         $I->fillField(['id' => 'name'], $nameB);
-        $I->click("Update");
-        $I->waitForText('Update Player: “'.$nameB.'”', $this::TEXT_WAIT_TIMEOUT * 1.5 );
-        $I->see('Update Player: “'.$nameB.'”');
-        $I->click(".close");
-        $I->wantTo('create a player on the management page with a valid number4');
+        $I->click(['id'=>"submit"]);
+        $I->wait(10);
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
+        $I->waitForText('Update Player:', $this::TEXT_WAIT_TIMEOUT * 1.5 );
+        $I->seeInField("#name", "$nameB" );
+        $I->wantTo('update a player on the management page with a valid number4');
         $I->fillField(['id' => 'phone'], $phone4);
         $I->fillField(['id' => 'name'], $name);
-        $I->click("Update");
-        $I->waitForText('Update Player: “'.$name.'”', $this::TEXT_WAIT_TIMEOUT * 1.5 );
-        $I->see('Update Player: “'.$name.'”');
-        $I->click(".close");
-        $I->wantTo('create a player on the management page with a valid number5');
+        $I->click(['id'=>"submit"]);
+        $I->wait(10);
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
+        $I->waitForText('Update Player:', $this::TEXT_WAIT_TIMEOUT * 1.5 );
+        $I->seeInField("#name", "$name" );
+        $I->wantTo('update a player on the management page with a valid number5');
         $I->fillField(['id' => 'phone'], $phone5);
         $I->fillField(['id' => 'name'], $nameB);
-        $I->click("Update");
-        $I->waitForText('Update Player: “'.$nameB.'”', $this::TEXT_WAIT_TIMEOUT * 1.5 );
-        $I->see('Update Player: “'.$nameB.'”');
-        $I->click(".close");
-        $I->wantTo('create a player on the management page with a valid number6');
+        $I->click(['id'=>"submit"]);
+        $I->wait(10);
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
+        $I->waitForText('Update Player:', $this::TEXT_WAIT_TIMEOUT * 1.5 );
+        $I->seeInField("#name", "$nameB" );
+        $I->wantTo('update a player on the management page with a valid number6');
         $I->fillField(['id' => 'phone'], $phone6);
         $I->fillField(['id' => 'name'], $name);
-        $I->click("Update");
-        $I->waitForText('Update Player: “'.$name.'”', $this::TEXT_WAIT_TIMEOUT * 1.5 );
-        $I->see('Update Player: “'.$name.'”');
-        $I->click(".close");
-        $I->wantTo('create a player on the management page with a valid number7');
+        $I->click(['id'=>"submit"]);
+        $I->wait(10);
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
+        $I->waitForText('Update Player:', $this::TEXT_WAIT_TIMEOUT * 1.5 );
+        $I->seeInField("#name", "$name" );
+        $I->wantTo('update a player on the management page with a valid number7');
         $I->fillField(['id' => 'phone'], $phone7);
         $I->fillField(['id' => 'name'], $nameB);
-        $I->click("Update");
-        $I->waitForText('Update Player: “'.$nameB.'”', $this::TEXT_WAIT_TIMEOUT * 1.5 );
-        $I->see('Update Player: “'.$nameB.'”');
-        $I->click(".close");
-        $I->wantTo('create a player on the management page with a valid number8');
+        $I->click(['id'=>"submit"]);
+        $I->wait(10);
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
+        $I->waitForText('Update Player:', $this::TEXT_WAIT_TIMEOUT * 1.5 );
+        $I->seeInField("#name", "$nameB" );
+        $I->wantTo('update a player on the management page with a valid number8');
         $I->fillField(['id' => 'phone'], $phone8);
         $I->fillField(['id' => 'name'], $name);
-        $I->click("Update");
-        $I->waitForText('Update Player: “'.$name.'”', $this::TEXT_WAIT_TIMEOUT * 1.5 );
-        $I->see('Update Player: “'.$name.'”');
-        $I->click(".close");
-        $I->wantTo('create a player on the management page with a valid number9');
+        $I->click(['id'=>"submit"]);
+        $I->wait(10);
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
+        $I->waitForText('Update Player:', $this::TEXT_WAIT_TIMEOUT * 1.5 );
+        $I->seeInField("#name", "$name" );
+        $I->wantTo('update a player on the management page with a valid number9');
         $I->fillField(['id' => 'phone'], $phone9);
         $I->fillField(['id' => 'name'], $nameB);
         $I->click("Update");
-        $I->waitForText('Update Player: “'.$nameB.'”', $this::TEXT_WAIT_TIMEOUT * 1.5 );
-        $I->see('Update Player: “'.$nameB.'”');
-        $I->click(".close");
-        $I->wantTo('create a player on the management page with a valid number10');
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
+        $I->waitForText('Update Player:', $this::TEXT_WAIT_TIMEOUT * 1.5 );
+        $I->seeInField("#name", "$nameB" );
+        $I->wantTo('update a player on the management page with a valid number10');
         $I->fillField(['id' => 'phone'], $phone10);
         $I->fillField(['id' => 'name'], $name);
-        $I->click("Update");
-        $I->waitForText('Update Player: “'.$name.'”', $this::TEXT_WAIT_TIMEOUT * 1.5 );
-        $I->see('Update Player: “'.$name.'”');
-        $I->click(".close");
-        $I->wantTo('create a player on the management page with a valid number11');
+        $I->click(['id'=>"submit"]);
+        $I->wait(10);
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
+        $I->waitForText('Update Player:', $this::TEXT_WAIT_TIMEOUT * 1.5 );
+        $I->seeInField("#name", "$name" );
+        $I->wantTo('update a player on the management page with a valid number11');
         $I->fillField(['id' => 'phone'], $phone11);
-        $I->click("Update");
+        $I->click(['id'=>"submit"]);
+        $I->wait(10);
+        $I->checkIfJQueryIsWorking($I,  $this::TEXT_WAIT_TIMEOUT);
         $I->waitForText("The phone number isn't a valid one, or you forgot the area code", $this::TEXT_WAIT_TIMEOUT * 1.5 );
         $I->see("The phone number isn't a valid one, or you forgot the area code");
-        $I->dontSeeOptionIsSelected('select#game_id', 'Tester Game');
-        $I->dontSeeOptionIsSelected('select#tournament_id', 'Tester Tournament');
-        $I->dontSeeOptionIsSelected('select#team_id', 'Tester Team');
+        $this->localDontSeeOptionIsSelected($I, 'game_id', ['tester-game']);
+        $this->localDontSeeOptionIsSelected($I, 'tournament_id', ['Tester Tournament']);
+        $this->localDontSeeOptionIsSelected($I, 'team_id', ['Tester Team']);
     }
     /**
      * @param AcceptanceTester $I

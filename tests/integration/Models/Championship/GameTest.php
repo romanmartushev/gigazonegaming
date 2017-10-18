@@ -41,8 +41,11 @@ class GameTest extends \TestCase
     public function setUp()
     {
         parent::setUp();
+        $this->runDatabaseMigrations();
         $this->faker = Factory::create();
         $this->resetEventListeners('App\Models\Championship\Game');
+        $this->resetEventListeners('App\Models\Championship\Tournament');
+        $this->resetEventListeners('App\Models\Championship\Team');
 
     }
 
@@ -187,12 +190,56 @@ class GameTest extends \TestCase
      *
      * @test
      */
-    public function it_deletes_tournament_when_deleted()
+    public function it_deletes_all_child_tournaments_when_a_game_is_deleted()
     {
-        $game = factory(Game::class)->create();
-        $tournament = factory(Tournament::class)->create(['game_id' => $game->id]);
-
+        $game = Factory(Game::class)->create();
+//        codecept_debug($game);
+        $g_id = $game->id;
+        codecept_debug("______________________");
+        codecept_debug($g_id);
+        codecept_debug("______________________");
+        codecept_debug($game->name);
+        codecept_debug("______________________");
+        codecept_debug("______________________");
+        $t1 = Factory(Tournament::class)->create(['game_id' => $g_id]);
+//        codecept_debug("______________________");
+        codecept_debug($t1->toArray());
+//        codecept_debug("______________________");
+//        codecept_debug($t2);
+//        codecept_debug("______________________");
+        $t1Name = $t1->name;
+        $t1Id = $t1->id;
+//        codecept_debug($t1Name);
+//        codecept_debug("______________________");
+//        codecept_debug($t2Name);
+//        codecept_debug("______________________");
+//        codecept_debug($t1Id);
+//        codecept_debug("______________________");
+//        codecept_debug($t2Id);
+//        codecept_debug("______________________");
+        $game = Game::whereId($g_id);
+        codecept_debug("_______exists_______________");
+        codecept_debug($game->toArray());
+        codecept_debug("______________________");
         $game->delete();
-        $this->assertNull(Tournament::find($tournament->id));
+        codecept_debug("______deleted________________");
+        $game = Game::whereId($g_id);
+        codecept_debug($game);
+        codecept_debug("_____try to find_________________");
+        codecept_debug(($game == null) ? "true":"false");
+        codecept_debug("______________________");
+        $check1 = Tournament::whereId($t1Id);
+        $check2 = Tournament::whereName($t1Name);
+        codecept_debug("______________________");
+        codecept_debug("______________________");
+        codecept_debug($check1);
+        codecept_debug("______________________");
+        codecept_debug("______________________");
+        codecept_debug($check2);
+        codecept_debug("______________________");
+        codecept_debug("______________________");
+
+        $this->assertNull($check1);
+        $this->assertNull($check2);
     }
 }

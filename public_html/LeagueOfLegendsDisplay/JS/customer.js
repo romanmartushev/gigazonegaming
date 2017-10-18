@@ -5,8 +5,8 @@
 /*This function gets the team names and their color to update the
 * buttons once the cache is loaded as well as continually
 * checks the cache for updates */
-$(document).ready(GetTeamNames());
-function GetTeamNames(){
+$(document).ready(getTeamNames());
+function getTeamNames(){
     document.getElementById("info").innerHTML="Getting Team Names...";
     setInterval(function(){
         ///Execute cache controller with ajax
@@ -16,10 +16,10 @@ function GetTeamNames(){
             url: "/app/GameDisplay/getTeamName",
             success: function(data){
                 if(data){
-                    let color1 = [];
-                    let color2 = [];
-                    let color_1 = data[2].split(";");
-                    let color_2 = data[3].split(";");
+                    var color1 = [];
+                    var color2 = [];
+                    var color_1 = data[2].split(";");
+                    var color_2 = data[3].split(";");
                     for(let i=0;i<4;i++) {
                         color1.push(color_1[i].split(":"));
                         color2.push(color_2[i].split(":"));
@@ -33,6 +33,6 @@ function GetTeamNames(){
                 }
             }
 
-        })
+        });
     }, 5000);
 }

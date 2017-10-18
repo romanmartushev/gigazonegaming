@@ -2,8 +2,9 @@
 
 namespace App\Models\Championship;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Championship\Relation\PlayerRelation;
 use App\Models\Championship\Relation\PlayerRelationable;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class Tournament
@@ -20,7 +21,22 @@ class Tournament extends Model
     /**
      * @var array
      */
-    protected $fillable = ['name', 'game_id', 'max_players','updated_by','updated_on'];
+    protected $fillable = [
+        'name',
+        'title',
+        'max_players',
+        'max_teams',
+        'updated_by',
+        'updated_on',
+        'game_id',
+        'overflow',
+        'sign_up_open',
+        'sign_up_close',
+        'occurring',
+        'sign_up_form',
+        'sign_up_form_shortcode',
+        'overflow'
+    ];
 
     /**
      * @var array
@@ -44,8 +60,27 @@ class Tournament extends Model
 
         static::deleting(function ($tournament) {
             /** @var Tournament $tournament */
-            $tournament->teams()->delete();
-            $tournament->findPlayersRelations()->delete(); //this should delete the relations not the players
+            $hasTable = false;
+            if(\Schema::connection('mysql_champ')->hasTable('player_relations')) {
+                $hasTable = true;
+            }
+            $teams = Team::where("tournament_id","=",$tournament->id)->get();
+            foreach ($teams as $team) {
+                $team->delete();
+            }
+            if($hasTable) {
+                if (
+                PlayerRelation::where([
+                    ["relation_id", "=", $tournament->id],
+                    ["relation_type", "=", Tournament::class],
+                ])->exists()
+                ) {
+                    PlayerRelation::where([
+                        ["relation_id", "=", $tournament->id],
+                        ["relation_type", "=", Tournament::class],
+                    ])->delete();
+                }
+            }
 
         });
     }
@@ -83,7 +118,7 @@ class Tournament extends Model
      */
     public function teams()
     {
-        return $this->hasMany('App\Models\Championship\Team');
+        return $this->hasMany('App\Models\Championship\Team', 'tournament_id', 'id');
     }
 
     /**
@@ -93,4 +128,27 @@ class Tournament extends Model
     {
         return $this->teams()->get();
     }
+    /**
+     * @param $id
+     * @return mixed
+     */
+    static public function whereId($id)
+    {
+        if (Tournament::where('id', '=', intval($id))->exists()) {
+            return Tournament::where('id', '=', intval($id))->first();
+        }
+        return null;
+    }
+    /**
+     * @param $name
+     * @return mixed
+     */
+    static public function whereName($name)
+    {
+        if (Tournament::where('name','=', $name)->exists()) {
+            return Tournament::where('name','=', $name)->first();
+        }
+        return null;
+    }
+
 }

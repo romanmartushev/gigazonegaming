@@ -2,6 +2,7 @@
 
 namespace App\Models\Championship;
 
+use App\Http\Requests\TeamRequest;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Championship\Relation\PlayerRelationable;
 use App\Models\Championship\Relation\PlayerRelation;
@@ -32,9 +33,22 @@ class Team extends Model
 
         // when deleted
         static::deleting(function ($team) {
-            PlayerRelation::where('relation_type', '=', self::class)
-                ->where('relation_id', '=', $team->id)
-                ->delete();
+            $hasTable = false;
+            if(\Schema::connection('mysql_champ')->hasTable('player_relations')) {
+                $hasTable = true;
+            }
+            if($hasTable) {
+                if (PlayerRelation::where([
+                    ["relation_id", "=", $team->id],
+                    ["relation_type", "=", Team::class],
+                ])->exists()
+                ) {
+                    PlayerRelation::where([
+                        ["relation_id", "=", $team->id],
+                        ["relation_type", "=", Team::class],
+                    ])->delete();
+                }
+            }
         });
     }
 
@@ -124,5 +138,27 @@ class Team extends Model
         $maxPlayers = $this->tournament()->select('max_players')->first()->toArray();
         $teamCount = $this->players()->count();
         return $maxPlayers["max_players"] > $teamCount; //if team is full this will eval to true, otherwise will eval to false
+    }
+    /**
+     * @param $id
+     * @return mixed
+     */
+    static public function whereId($id)
+    {
+        if (Team::where('id', '=', intval($id))->exists()) {
+            return Team::where('id', '=', intval($id))->first();
+        }
+        return null;
+    }
+    /**
+     * @param $name
+     * @return mixed
+     */
+    static public function whereName($name)
+    {
+        if (Team::where('name','=', $name)->exists()) {
+            return Team::where('name','=', $name)->first();
+        }
+        return null;
     }
 }

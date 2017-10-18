@@ -50,7 +50,6 @@ coverage-checker.php
 node_modules/*
 public_html/bower_components/*
 ModelFactory.php.orig
-composer.lock
 build/packaging
 build/staging-deployment/build/packaging
 .mertrc
@@ -144,3 +143,15 @@ constant_contact
 !constant_contact/email/template
 public_html/LeagueOfLegendsDisplay/JS/jquery.mobile.custom/jquery.mobile.custom.js
 public_html/LeagueOfLegendsDisplay/JS/jquery.mobile.custom/jquery.mobile.custom.min.js
+/dock-helpers.sh
+/temp/
+/v8-compile-cache-0/
+/public_html/timestamp.php
+install.sh.old
+!/tests/_output/records.html
+records.html
+phlint.phar
+/git_log.txt
+/public_html/wp-content/themes/gigazone-gaming/latest_git_commit_hash.txt
+/public_html/wp-content/themes/gigazone-gaming/dist/
+public_html/app/content/dist

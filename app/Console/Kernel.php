@@ -14,8 +14,9 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         'App\Console\Commands\FilldbWithTestData',
-        'App\Console\Commands\testGameDispalyController',
-
+        'App\Console\Commands\CreatePlayerGameTournamentTesting',
+        'App\Console\Commands\RealTestData',
+        'App\Console\Commands\CacheTeamOverride'
     ];
 
     /**

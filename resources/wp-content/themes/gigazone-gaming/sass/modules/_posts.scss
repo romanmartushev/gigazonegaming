@@ -1,10 +1,4 @@
-.article-container {
-  margin-top: -1px;
 
-  @include mq-phone {
-    @include bs-full-width-columns;
-  }
-}
 
 .title-page {
   @include font-size(5.875);
@@ -147,6 +141,11 @@
       @include line-height(3.125);
     }
 
+    @include mq-phone {
+      @include font-size(4);
+      @include line-height(2.875);
+    }
+
   }
 
   &.format-standard {
@@ -160,6 +159,13 @@
 
     @include mq-phone {
       @include padding(0,1.5);
+      & > h1, & > h2 {
+        @include padding-left(0);
+        @include padding-right(0);
+        @include margin-left(-1.5);
+        @include margin-right(-1.5);
+
+      }
     }
 
     img {
@@ -269,6 +275,9 @@ float: left;
   & .post-title {
     color: $color-dark-gray;
     @include padding(2.75, 1.75);
+    @include mq_phone {
+      @include padding(2.125, 1.25);
+    }
   }
 
   &:after {
@@ -298,7 +307,7 @@ float: left;
   height: 100%;
   width: 100%;
   background-repeat: no-repeat;
-  background-position: 25% 110%;
+  background-position: 25% 100%;
   background-attachment: fixed;
   background-size: 250%;
   opacity: .1;
